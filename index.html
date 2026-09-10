@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <base target="_top">
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+  
+  <style>    
+    /* STYLING MODAL / POPUP */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-container {
+      background: #ffffff;
+      width: 90%;
+      max-width: 1400px; /* Lebar maksimum default */
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      max-height: 85vh;
+    }
+    .modal-container.small-modal {
+      max-width: 600px; /* Khusus untuk form admin agar tidak terlalu lebar */
+    }
+    .modal-header {
+      padding: 15px 20px;
+      background: #1e3a8a;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center; 
+    }
+    .modal-header h3 { 
+      margin: 0; 
+      font-size: 1.1rem; 
+      line-height: 1.4;
+      flex: 1; 
+    }
+    .modal-close {
+      background: none; border: none; color: white;
+      font-size: 1.1rem; width: 30px; height: 30px;
+      margin-right: -18px; cursor: pointer; display: flex;
+      align-items: center; justify-content: center;
+      border-radius: 4px; transition: background 0.2s;
+    }
+    .modal-close:hover { background: rgba(255, 255, 255, 0.15); }
+    .modal-body { padding: 20px; overflow-y: auto; }
+    
+    .modal-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .modal-table th, .modal-table td { padding: 10px; border: 1px solid #e2e8f0; text-align: left; font-size: 0.9rem; }
+    .modal-table th { background-color: #f8fafc; color: #334155; }
+
+    /* LAYOUT DASHBOARD */
+    .dashboard-layout { display: flex; min-height: 100vh; background-color: #ffffff; }
+    .sidebar { 
+      width: 260px; 
+      background-color: #ffffff; 
+      border-right: 1px solid var(--border); 
+      box-shadow: 2px 0 10px rgba(0,0,0,0.05); 
+      display: flex; 
+      flex-direction: column; 
+      position: fixed; 
+      top: 0;         /* Memaksa menu menempel di atap layar */
+      left: 0;        /* Memaksa menu menempel di sisi kiri layar */
+      z-index: 110;   /* Memastikan menu tidak tertimpa elemen lain */
+      height: 100vh; 
+      overflow-y: auto; 
+    }
+    .sidebar-header { padding: 20px; border-bottom: 1px solid var(--border); color: var(--primary); }
+    .sidebar-header h3 { margin: 0; font-size: 1.1rem; }
+    .sidebar-menu { padding: 15px 0; }
+    .menu-section-title { padding: 15px 20px 5px 20px; font-size: 0.75rem; font-weight: bold; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
+    .menu-item { padding: 12px 20px; cursor: pointer; color: #333; transition: all 0.2s; display: flex; align-items: center; font-size: 0.95rem; }
+    .menu-item:hover { background-color: #f8fafc; color: var(--secondary); }
+    .main-content { flex: 1; margin-left: 260px; padding: 30px; }
+
+    /* CSS RESET & VARIABEL WARNA */
+    :root { --primary: #1e3a8a; --secondary: #3b82f6; --bg-color: #f1f5f9; --text-main: #334155; --text-muted: #64748b; --border: #e2e8f0; --success: #10b981; --danger: #ef4444; }
+    body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); margin: 0; padding: 0; line-height: 1.5; }
+    /* --- PENGATURAN AREA HEADER BINGKAI --- */
+    .top-header-area {
+      background-color: #ffffff; /* Membuat area luar kotak biru menjadi putih */
+      padding-left: 260px; /* Melewati lebar sidebar agar kotak biru sejajar dengan form */
+      padding-top: 30px; 
+    }
+
+    .navbar { 
+      /* --- KODE BACKGROUND GAMBAR --- */
+      /* Lapisan hitam transparan (0.6) ditambahkan agar teks putih tetap terbaca */
+      background: linear-gradient(rgba(0, 0, 0, 0.0), rgba(0, 0, 0, 0.0)), url('https://i.imgur.com/td8BFY8.jpeg'); 
+      background-size: cover; /* Membuat gambar menutupi seluruh area kotak */
+      background-position: center; /* Memosisikan gambar tepat di tengah */
+      background-repeat: no-repeat; /* Mencegah gambar berulang jika ukurannya kecil */
+      color: white; 
+      padding: 25px; 
+      display: flex; 
+      flex-direction: column; 
+      align-items: center; 
+      justify-content: center; 
+      text-align: center; 
+      
+      /* Mengubahnya menjadi bentuk kartu (bingkai) */
+      border-radius: 12px; 
+      max-width: 1500px; /* Ukuran maksimal persis seperti form permintaan */
+      margin: 0 auto; /* Menengahkan kotak biru di sisi kanan layar */
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15); 
+      position: relative; 
+      z-index: 100; 
+    }
+    
+    .navbar img { height: 150px; margin-bottom: 10px; filter: drop-shadow(0px 4px 6px rgba(0,0,0,0.3)); }
+    .judul-utama { margin: 0; font-family: 'Montserrat', sans-serif; font-size: 3.0rem; font-weight: 800; letter-spacing: 2px; color: #ffffff; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+    .judul-sub { margin: 5px 0 0 0; font-family: 'Inter', sans-serif; font-size: 2.0rem; font-weight: 800; letter-spacing: 1.5px; color: #ffffff; text-transform: uppercase; }
+    
+    /* KONTENER UTAMA */
+    .main-wrapper { max-width: 100%; margin: 30px auto; padding: 0 20px; display: grid; gap: 25px; }
+    
+    .card { background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); border: 1px solid rgba(0,0,0,0.05); }
+    .card-header { margin-bottom: 25px; border-bottom: 2px solid var(--bg-color); padding-bottom: 15px; }
+    .card-header h2 { margin: 0; color: var(--primary); font-size: 1.2rem; font-weight: 700; }
+
+    /* FORMULIR */
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-main); }
+    .bantuan { display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: -5px; margin-bottom: 8px; }
+    input, select { width: 100%; padding: 12px 15px; border: 1px solid var(--border); border-radius: 8px; font-size: 0.95rem; font-family: inherit; box-sizing: border-box; transition: all 0.3s ease; background-color: #f8fafc; }
+    input[type="file"] { padding: 9px 15px; background-color: white; cursor: pointer; }
+    input:focus, select:focus { outline: none; border-color: var(--secondary); background-color: white; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }
+    .kapital { text-transform: uppercase; }
+
+    button { width: 100%; padding: 14px; background-color: var(--secondary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background-color 0.3s ease, transform 0.1s; margin-top: 10px; }
+    button:hover { background-color: #2563eb; }
+    button:active { transform: scale(0.98); }
+    button:disabled { background-color: #94a3b8; cursor: not-allowed; }
+    button.btn-success { background-color: var(--success); }
+    button.btn-success:hover { background-color: #059669; }
+
+    .alert-box { margin-top: 25px; padding: 20px; border-radius: 8px; text-align: center; display: none; animation: fadeIn 0.5s ease; }
+    .alert-success { background-color: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; }
+    .alert-error { background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+    .nomor-besar { font-size: 1.5rem; font-weight: 800; color: var(--primary); margin: 10px 0; display: block; background: white; padding: 10px; border-radius: 6px; border: 1px dashed var(--secondary); }
+
+    .table-responsive { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; min-width: 600px; }
+    th { background-color: #f8fafc; color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 0.5px; padding: 12px 15px; border-bottom: 2px solid var(--border); text-align: left; }
+    td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    tr:hover td { background-color: #f1f5f9; }
+    .tag-nomor { background-color: #e0e7ff; color: #3730a3; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 0.85rem; display: inline-block; }
+    .loading-text { text-align: center; color: var(--text-muted); font-style: italic; padding: 30px !important; }
+
+        /* --- DESAIN AREA FOOTER --- */
+    footer { 
+      background-color: white; 
+      border-radius: 12px; 
+      padding: 20px; 
+      /* Menyesuaikan lebar maksimal agar presisi dengan form (900px) */
+      max-width: 1200px; 
+      margin: 30px auto 0 auto; 
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05); 
+      border: 1px solid rgba(0,0,0,0.05);
+      text-align: center; 
+      color: var(--text-muted); 
+      font-size: 0.85rem; 
+      line-height: 1.6;
+    }
+
+    .input-group-combo { display: flex; position: relative; width: 100%; }
+    .input-group-combo input { border-top-right-radius: 0; border-bottom-right-radius: 0; flex: 1; }
+    .btn-dropdown-trigger { background-color: #e2e8f0; border: 1px solid var(--border); border-left: none; border-top-right-radius: 8px; border-bottom-right-radius: 8px; color: var(--text-main); padding: 0 15px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color 0.2s; width: auto; margin-top: 0; }
+    .btn-dropdown-trigger:hover { background-color: #cbd5e1; }
+
+    @keyframes putar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    .spinner-icon { animation: putar 1s linear infinite; width: 18px; height: 18px; vertical-align: middle; margin-right: 8px; }
+
+    /* Gaya Analisa Dashboard Admin */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: #f8fafc; border: 1px solid var(--border); padding: 15px; border-radius: 8px; text-align: center; }
+    .stat-card h4 { margin: 0 0 5px 0; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
+    .stat-card p { margin: 0; font-size: 2rem; font-weight: bold; color: var(--primary); }
+
+<!-- ... existing code ... -->
+    .spinner-icon { animation: putar 1s linear infinite; width: 18px; height: 18px; vertical-align: middle; margin-right: 8px; }
+
+    /* Gaya Analisa Dashboard Admin */
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .stat-card { background: #f8fafc; border: 1px solid var(--border); padding: 15px; border-radius: 8px; text-align: center; }
+    .stat-card h4 { margin: 0 0 5px 0; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; }
+    .stat-card p { margin: 0; font-size: 2rem; font-weight: bold; color: var(--primary); }
+
+    /* --- TAMBAHKAN KODE INI DI SINI --- */
+    select#exportDataSubseksi, select#zipSubseksi {
+      width: 100%;
+      padding: 12px 15px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      background-color: white;
+      cursor: pointer;
+      appearance: auto;
+      z-index: 2000;
+      position: relative;
+    }
+    .form-group { margin-bottom: 20px; position: relative; }
+    .modal-body { padding: 20px; overflow-y: visible !important; }
+
+  /* --- PENGATURAN KHUSUS UNTUK HP (MOBILE RESPONSIVE) --- */
+      @media screen and (max-width: 768px) {
+        .top-header-area {
+        padding-left: 15px; /* Menghapus jarak pinggir di HP */
+        padding-right: 15px;
+        padding-top: 15px;
+      }
+        /* Mengubah susunan layout utama menjadi atas-bawah */
+        .dashboard-layout {
+          flex-direction: column;
+        }
+        
+        /* Melepas posisi fixed pada menu navigasi agar pindah ke atas konten utama */
+        .sidebar {
+          position: relative; 
+          width: 100%;
+          height: auto;
+          border-right: none;
+          border-bottom: 2px solid var(--border);
+        }
+        
+        /* Menghapus jarak margin kiri pada form dan menyesuaikan ukurannya */
+        .main-content {
+          margin-left: 0; 
+          padding: 15px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        
+        /* Mengecilkan sedikit ukuran logo dan teks judul di HP agar tidak terlalu penuh */
+        .navbar {
+          padding: 25px 15px;
+        }
+        .navbar img {
+          height: 100px;
+        }
+        .judul-utama {
+          font-size: 1.8rem;
+        }
+        .judul-sub {
+          font-size: 1rem;
+        }
+        
+        /* Membuat kolom input Subseksi Pengirim dan Nama Pemohon menjadi bertumpuk atas-bawah */
+        div[style*="grid-template-columns: 1fr 1fr"] {
+          grid-template-columns: 1fr !important;
+        }
+        
+        /* Memastikan kontainer utama tidak melebihi layar */
+        .modal-container {
+          width: 95%;
+        }
+      }
+
+  </style>
+</head>
+<body>
+
+  <!-- BUNGKUS DENGAN TOP-HEADER-AREA -->
+  <div class="top-header-area">
+    <div class="navbar">
+      <img src="https://www.image2url.com/r2/default/files/1785556261208-bd7428b7-bb6b-4103-898e-09755d8d3e5e.png" alt="Logo Persuratan">
+      <h1 class="judul-utama">SURAT KELUAR OTOMATIS</h1>
+      <h2 class="judul-sub">Lapas Kelas III Parigi</h2>
+    </div>
+  </div>
+
+  <div class="dashboard-layout">
+    <!-- SIDEBAR KIRI -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h3>Menu Navigasi</h3>
+      </div>
+      
+      <div class="sidebar-menu">
+        <div class="menu-section-title">Arsip Subseksi</div>
+        <div class="menu-item" onclick="bukaArsip('Tata Usaha')"><span>🗂️ Tata Usaha</span></div>
+        <div class="menu-item" onclick="bukaArsip('Subseksi Keamanan dan Ketertiban')"><span>🗂️ Keamanan & Ketertiban</span></div>
+        <div class="menu-item" onclick="bukaArsip('Subseksi Pembinaan')"><span>🗂️ Pembinaan</span></div>
+        <div class="menu-item" onclick="bukaArsip('Subseksi Admisi Orientasi')"><span>🗂️ Admisi Orientasi</span></div>
+
+        <div class="menu-section-title">Referensi</div>
+        <div class="menu-item" onclick="bukaDasarHukum()"><span>⚖️ Dasar Hukum & SOP</span></div>
+
+        <!-- PANEL ADMIN (Otomatis muncul jika punya akses) -->
+        <div id="adminPanelWrapper" style="display: none;">
+            <div class="menu-section-title" style="color: var(--danger);">Panel Admin</div>
+            <div class="menu-item" onclick="bukaAdminAnalisa()"><span>📊 Analisa Penomoran</span></div>
+            <div class="menu-item" onclick="bukaAdminEksporData()"><span>📄 Ekspor Data (Excel)</span></div>
+            <div class="menu-item" onclick="bukaAdminEksporZip()"><span>🗜️ Ekspor Dokumen (ZIP)</span></div>
+        </div>
+      </div>
+    </aside>
+   
+    <!-- KONTEN UTAMA KANAN -->
+    <main class="main-content">
+      <div class="container">
+        
+        <div class="card">
+          <div class="main-wrapper">
+            
+            <div class="card">
+              <div class="card-header">
+                <h2>Form Permintaan Nomor Surat</h2>
+              </div>
+              
+              <form id="myForm" onsubmit="handleFormSubmit(event)">
+                <div class="form-group">
+                  <label>Tanggal Surat</label>
+                  <input type="date" name="tanggalSurat" required>
+                </div>
+
+                <div class="form-group">
+                  <label>Kode Klasifikasi Surat</label>
+                  <span class="bantuan">Sentuh tombol panah di kanan untuk melihat daftar, atau ketik kata kunci.</span>
+                  <div class="input-group-combo">
+                    <input list="daftarKode" name="kodeKlasifikasi" id="kodeKlasifikasi" class="kapital" placeholder="PILIH ATAU KETIK KODE..." autocomplete="off" required>
+                    <button type="button" class="btn-dropdown-trigger" onclick="bukaDatalistHP()">
+                      <svg style="width:16px;height:16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                  </div>
+                  <datalist id="daftarKode">
+                    <option value="PR.01.01 - Rencana pembangunan jangka panjang"></option>
+                    <option value="PR.01.02 - Rencana pembangunan jangka menengah"></option>
+                    <option value="PR.01.03 - Rencana strategis kementerian"></option>
+                    <option value="PR.01.04 - Rencana strategis satuan kerja"></option>
+                    <option value="PR.01.05 - Pertemuan Tiga Pihak (Trilateral Meeting)"></option>
+                    <option value="PR.01.06 - Rencana kerja"></option>
+                    <option value="PR.01.07 - Rencana kerja dan anggaran"></option>
+                    <option value="PR.02.01 - Evaluasi dan Kinerja Kementerian"></option>
+                    <option value="PR.02.02 - Evaluasi dan Kinerja Satuan Kerja"></option>
+                    <option value="PR.03.0 - Laporan Akuntabilitas Kinerja Instansi Pemerintah"></option>
+                    <option value="PR.04.01 - Laporan Tetap Periodik"></option>
+                    <option value="PR.04.02 - Laporan Tahunan"></option>
+                    <option value="PR.04.03 - Laporan Insidentil"></option>
+                    <option value="PR.05.01 - Rapat Kerja dengan Dewan Perwakilan Rakyat"></option>
+                    <option value="PR.05.02 - Rapat Kerja Tingkat Kementerian"></option>
+                    <option value="PR.05.03 - Rapat Kerja Unit Utama atau Rapat Kerja Teknis"></option>
+                    <option value="PR.05.04 - Rapat Kerja Tingkat Kantor Wilayah"></option>
+                    <option value="PR.05.05 - Rapat Pimpinan"></option>
+                    <option value="PR.05.06 - Rapat staf"></option>
+                    <option value="PR.06.01 - Sidang kabinet terbatas"></option>
+                    <option value="PR.06.02 - Sidang Kabinet Paripurna"></option>
+                    <option value="PR.07.01 - Perjanjian Kinerja Jabatan Pimpinan Tinggi Utama dan Madya"></option>
+                    <option value="PR.07.02 - Perjanjian Kinerja Jabatan Pimpinan Tinggi Pratama ke Bawah"></option>
+                    <option value="KU.01.01 - Pedoman, Petunjuk, dan Administrasi Pelaksanaan Anggaran"></option>
+                    <option value="KU.01.02 - Daftar Isian Pelaksanaan Anggaran"></option>
+                    <option value="KU.01.03 - Penerimaan Negara Bukan Pajak"></option>
+                    <option value="KU.02.01 - Pedoman dan Petunjuk Administrasi Keuangan"></option>
+                    <option value="KU.02.02 - Penatausahaan Hibah"></option>
+                    <option value="KU.02.03 - Pejabat Perbendaharaan Negara"></option>
+                    <option value="KU.02.04 - Penyelesaian Kerugian Negara"></option>
+                    <option value="KU.02.05 - Penatausahaan Rekening Pemerintah"></option>
+                    <option value="KU.03.01 - Pertanggungjawaban Belanja"></option>
+                    <option value="KU.03.02 - Buku Kas Umum dan Buku Pembantu"></option>
+                    <option value="KU.03.03 - Laporan Pertanggungjawaban Bendahara Pengeluaran"></option>
+                    <option value="KU.03.04 - Laporan Pertanggungjawaban Bendahara Penerimaan"></option>
+                    <option value="KU.03.05 - Penerimaan Negara Pajak"></option>
+                    <option value="KU.04.01 - Laporan Keuangan"></option>
+                    <option value="KU.04.02 - Rekonsiliasi dan Data Laporan Keuangan"></option>
+                    <option value="KU.04.03 - Penyelesaian Tindak Lanjut Temuan Hasil Pemeriksaan Badan Pemeriksa Keuangan Republik Indonesia dan Inspektorat Jenderal"></option>
+                    <option value="OT.01.01 - Organisasi dan Tata Kerja Kementerian"></option>
+                    <option value="OT.01.02 - Organisasi dan Tata Kerja Kantor Wilayah"></option>
+                    <option value="OT.01.03 - Organisasi dan Tata Kerja Unit Pelaksana Teknis"></option>
+                    <option value="OT.01.04 - Evaluasi Kelembagaan"></option>
+                    <option value="OT.02.01 - Standarisasi Sarana Kerja"></option>
+                    <option value="OT.02.02 - Sistem, Prosedur, dan Metode Kerja"></option>
+                    <option value="OT.02.03 - Analisa dan Uraian Jabatan"></option>
+                    <option value="OT.03.01 - Penilaian Mandiri Pelaksanaan Reformasi Birokrasi"></option>
+                    <option value="OT.03.02 - Zona Integritas"></option>
+                    <option value="OT.03.03 - Evaluasi Reformasi Birokrasi"></option>
+                    <option value="OT.04.01 - Instruksi Menteri"></option>
+                    <option value="SA.01.01 - Inventarisasi Jabatan/Peta Jabatan"></option>
+                    <option value="SA.01.02 - Evaluasi Jabatan"></option>
+                    <option value="SA.01.03 - Usulan Formasi"></option>
+                    <option value="SA.01.04 - Alokasi Formasi"></option>
+                    <option value="SA.02.01 - Proses Penerimaan Sumber Daya Manusia Aparatur"></option>
+                    <option value="SA.02.02 - Berkas Lamaran yang Tidak Diterima"></option>
+                    <option value="SA.02.03 - Surat Keputusan Calon Aparatur Sipil Negara/Aparatur Sipil Negara Kolektif"></option>
+                    <option value="SA.02.04 - Penerimaan Sumber Daya Manusia Aparatur Dari Sekolah Kedinasan Imigrasi dan Pemasyarakatan"></option>
+                    <option value="SA.02.05 - Ujian Dinas dan Ujian Penyesuaian Ijazah"></option>
+                    <option value="SA.03.01 - Pengangkatan Calon Aparatur Sipil Negara"></option>
+                    <option value="SA.03.02 - Pengangkatan Aparatur Sipil Negara"></option>
+                    <option value="SA.03.03 - Pengangkatan Jabatan Struktural"></option>
+                    <option value="SA.03.04 - Pengangkatan Jabatan Fungsional"></option>
+                    <option value="SA.04.01 - Alih Tugas/Diperbantukan/Dipekerjakan/ Pelaksana"></option>
+                    <option value="SA.04.02 - Pelaksana Harian/Pelaksana Tugas"></option>
+                    <option value="SA.04.03 - Pencantuman Gelar Akademik"></option>
+                    <option value="SA.04.04 - Kenaikan Gaji Berkala"></option>
+                    <option value="SA.04.05 - Kenaikan Pangkat/Golongan"></option>
+                    <option value="SA.04.06 - Peninjauan Masa Kerja"></option>
+                    <option value="SA.04.07 - Tim Penilai Kinerja"></option>
+                    <option value="SA.04.08 - Pengaktifan Kembali dari Cuti di Luar Tanggungan Negara dan Pengaktifan Setelah Pemberhentian Sementara"></option>
+                    <option value="SA.05.01 - Penilaian Prestasi Kerja Pegawai"></option>
+                    <option value="SA.05.02 - Pembinaan Disiplin dan Kode Etik"></option>
+                    <option value="SA.05.03 - Pemberian Penghargaan dan Tanda Jasa"></option>
+                    <option value="SA.06.01 - Pengembangan Kompetensi Jabatan Pimpinan Tinggi dan Administrasi"></option>
+                    <option value="SA.06.02 - Pengembangan Kompetensi Fungsional"></option>
+                    <option value="SA.06.03 - Pengiriman Peserta Diklat"></option>
+                    <option value="SA.06.04 - Beasiswa Pegawai"></option>
+                    <option value="SA.07.01 - Hukuman Disiplin Tingkat Ringan"></option>
+                    <option value="SA.07.02 - Tingkat Sedang"></option>
+                    <option value="SA.07.03 - Tingkat Berat"></option>
+                    <option value="SA.08.01 - Data Sumber Daya Manusia Aparatur"></option>
+                    <option value="SA.08.02 - Identitas Pegawai"></option>
+                    <option value="SA.08.03 - Izin Kepegawaian"></option>
+                    <option value="SA.08.04 - Keanggotaan Sumber Daya Manusia Aparatur dalam Organisasi Sosial"></option>
+                    <option value="SA.08.05 - Daftar Hadir/Absensi Sumber Daya Manusia Aparatur"></option>
+                    <option value="SA.09.01 - Kesehatan"></option>
+                    <option value="SA.09.02 - Tabungan Perumahan"></option>
+                    <option value="SA.09.03 - Tabungan dan Asuransi Pegawai Negeri"></option>
+                    <option value="SA.09.04 - Cuti"></option>
+                    <option value="SA.09.05 - Uang Duka Tewas"></option>
+                    <option value="SA.09.06 - Pembekalan Purnabakti"></option>
+                    <option value="SA.09.07 - Mutasi Keluarga"></option>
+                    <option value="SA.09.08 - Laporan Kekayaan"></option>
+                    <option value="SA.10.01 - Jabatan Pelaksana"></option>
+                    <option value="SA.10.02 - Jabatan Fungsional"></option>
+                    <option value="SA.11.01 - Pemberhentian atas Permintaan Sendiri"></option>
+                    <option value="SA.11.02 - Pemberhentian karena Batas Usia pensiun"></option>
+                    <option value="SA.11.03 - Pemberhentian Karena Keuzuran/Kondisi Jasmani Dan Rohani/Meninggal Dunia (tewas)"></option>
+                    <option value="SA.11.04 - Pemberhentian karena Hilang"></option>
+                    <option value="SA.11.05 - Pemberhentian Sementara"></option>
+                    <option value="SA.11.06 - Pensiun Janda/Duda dan Anak"></option>
+                    <option value="SA.12.01 - Berkas Perseorangan Pegawai Negeri Sipil"></option>
+                    <option value="SA.13.01 - Berkas Perseorangan Pegawai Pemerintah Dengan Perjanjian Kerja"></option>
+                    <option value="SA.14.01 - Berkas Perseorangan Menteri, Wakil Menteri Dan Pejabat Negara Lainnya"></option>
+                    <option value="SA.15.01 - Berkas Perseorangan Pimpinan Tinggi Madya"></option>
+                    <option value="SA.16.01 - Berkas Perseorangan Aparatur Sipil Negara yang Secara Individual Ditentukan oleh Menteri Berjasa atau Terlibat Peristiwa Berskala Nasional"></option>
+                    <option value="SA.17.01 - Korps Pegawai Republik Indonesia"></option>
+                    <option value="SA.17.02 - Dharma Wanita"></option>
+                    <option value="SA.17.03 - Koperasi"></option>
+                    <option value="PB.01.01 - Usulan Rencana Kebutuhan Barang Milik Negara"></option>
+                    <option value="PB.01.02 - Rencana Kebutuhan Barang Milik Negara Kementerian"></option>
+                    <option value="PB.01.03 - Hasil Analisis Kebutuhan Barang Milik Negara"></option>
+                    <option value="PB.01.04 - Rencana Kebutuhan Aset Berwujud"></option>
+                    <option value="PB.01.05 - Rencana Kebutuhan Aset Tak Berwujud"></option>
+                    <option value="PB.02.01 - Pengadaan Barang Persediaan (habis pakai)"></option>
+                    <option value="PB.02.02 - Pengadaan Barang bukan Persediaan"></option>
+                    <option value="PB.02.03 - Pengadaan Jasa Lainnya"></option>
+                    <option value="PB.02.04 - Pengadaan Jasa Konsultasi"></option>
+                    <option value="PB.02.05 - Pengadaan Teknis Aset Tetap (tanah)"></option>
+                    <option value="PB.02.06 - Pengadaan Aset Tidak Berwujud (perangkat lunak)"></option>
+                    <option value="PB.02.07 - Pengadaan Sewa"></option>
+                    <option value="PB.02.08 - Pengadaan Modal Peralatan dan Mesin"></option>
+                    <option value="PB.02.09 - Pekerjaan Konstruksi (bangunan)"></option>
+                    <option value="PB.02.1 - Pengelolaan Layanan Pengadaan secara Elektronik dan Data Informasi Pengadaan Barang/Jasa"></option>
+                    <option value="PB.02.11 - Pembinaan, Bimbingan, Pendampingan, Dan Konsultasi Teknis Pengadaan Barang/Jasa"></option>
+                    <option value="PB.02.12 - Tindak Lanjut Hasil Pemeriksaan"></option>
+                    <option value="PB.02.13 - Laporan Pengadaan Barang/Jasa"></option>
+                    <option value="PB.02.14 - Telaahan Permasalahan Pengadaan Barang/Jasa"></option>
+                    <option value="PB.02.15 - Unit Kerja Pengadaan Barang dan Jasa"></option>
+                    <option value="PB.02.16 - Satuan Pelaksana Unit Kerja Pengadaan Barang dan Jasa Wilayah"></option>
+                    <option value="PB.03.01 - Pendistribusian Barang Milik Negara"></option>
+                    <option value="PB.03.02 - Penggunaan Barang Milik Negara"></option>
+                    <option value="PB.03.03 - Barang Milik Negara Bernilai Sejarah"></option>
+                    <option value="PB.03.04 - pemanfaatan barang milik negara"></option>
+                    <option value="PB.03.05 - Permasalahan Barang Milik Negara dan Berkas Pengamanan dan Pemeliharaan"></option>
+                    <option value="PB.03.06 - Rumah Negara"></option>
+                    <option value="PB.04.01 - Pencatataan Barang Milik Negara"></option>
+                    <option value="PB.04.02 - Inventarisasi"></option>
+                    <option value="PB.04.03 - Opname Fisik"></option>
+                    <option value="PB.04.04 - Rekonsiliasi Data Barang Milik Negara"></option>
+                    <option value="PB.04.05 - Pengawasan dan Pengendalian Barang Milik Negara"></option>
+                    <option value="PB.04.06 - Laporan Barang Milik Negara"></option>
+                    <option value="PB.05.01 - Penjualan"></option>
+                    <option value="PB.05.02 - Tukar Menukar"></option>
+                    <option value="PB.05.03 - Hibah"></option>
+                    <option value="PB.05.04 - Pemusnahan dan Penghapusan Barang Milik Negara Tidak Bernilai Sejarah"></option>
+                    <option value="PB.05.05 - Pemusnahan dan Penghapusan Barang Milik Negara Bernilai Sejarah"></option>
+                    <option value="KS.01.01 - Lembaga Tinggi Negara"></option>
+                    <option value="KS.01.02 - Lembaga Pemerintah"></option>
+                    <option value="KS.01.03 - Organisasi Kemasyarakatan/Lembaga Swasta"></option>
+                    <option value="KS.01.04 - Perguruan Tinggi/Sekolah"></option>
+                    <option value="KS.02.01 - Kesepakatan/ Nota Kesepahaman/Nota Memorandum Of Understanding/Kontrak/ Perjanjian Kerja Sama Dalam Negeri dan Luar Negeri"></option>
+                    <option value="KS.03.01 - Permintaan dan Pengelolaan Data Kerja Sama"></option>
+                    <option value="KS.04.01 - Audiensi/Kunjungan"></option>
+                    <option value="KS.05.01 - Pemantauan dan Evaluasi"></option>
+                    <option value="KS.06.01 - Administrasi Kerja Sama"></option>
+                    <option value="HK.01.01 - Penyusunan Rencana Pembentukan Peraturan Perundang-undangan"></option>
+                    <option value="HK.01.02 - Instrumen Hukum yang Bersifat Nasional"></option>
+                    <option value="HK.01.03 - Instrumen Hukum yang Bersifat Internal"></option>
+                    <option value="HK.02.01 - Advokasi Hukum Litigasi"></option>
+                    <option value="HK.02.02 - Advokasi Hukum Nonlitigasi"></option>
+                    <option value="HK.02.03 - Pengaduan Hukum"></option>
+                    <option value="HK.02.04 - Bantuan Hukum"></option>
+                    <option value="HK.02.05 - Layanan Aspirasi dan Pengaduan Online Rakyat"></option>
+                    <option value="HK.02.06 - Sistem Informasi Pelayanan Publik"></option>
+                    <option value="HK.02.07 - Telaah Hukum"></option>
+                    <option value="HK.03.01 - Sosialisasi/Penyuluhan dan Pembinaan Hukum"></option>
+                    <option value="UM.01.01 - Penciptaan Arsip"></option>
+                    <option value="UM.01.02 - Layanan Penggunaan Arsip"></option>
+                    <option value="UM.01.03 - Pemberkasan Arsip"></option>
+                    <option value="UM.01.04 - Penataan Arsip"></option>
+                    <option value="UM.01.05 - Pemeliharaan dan Perawatan Arsip Inaktif"></option>
+                    <option value="UM.01.06 - Alih Media Arsip"></option>
+                    <option value="UM.01.07 - Program Arsip Vital dan Terjaga"></option>
+                    <option value="UM.01.08 - Unggah Informasi Kearsipan pada Sistem Informasi Kearsipan Nasional"></option>
+                    <option value="UM.01.09 - Pemindahan Arsip"></option>
+                    <option value="UM.01.1 - Pemusnahan Arsip"></option>
+                    <option value="UM.01.11 - Penyerahan Arsip"></option>
+                    <option value="UM.01.12 - Pembinaan Kearsipan"></option>
+                    <option value="UM.01.13 - Pengawasan Kearsipan"></option>
+                    <option value="UM.01.14 - Monitoring dan Evaluasi"></option>
+                    <option value="UM.02.01 - Administrasi Penggunaan Ruang dan Peralatan Kantor"></option>
+                    <option value="UM.02.02 - Administrasi Peminjaman, Penggunaan, dan Penghunian Rumah Negara"></option>
+                    <option value="UM.02.03 - Administrasi Peminjaman, Penggunaan, dan Pemeliharaan Kendaraan Dinas"></option>
+                    <option value="UM.02.04 - Administrasi Peminjaman, Penggunaan dan Pemeliharaan Barang Elektronik serta Mesin"></option>
+                    <option value="UM.02.05 - Administrasi Pemeliharaan Gedung dan Bangunan serta Area Kantor"></option>
+                    <option value="UM.02.06 - Administrasi Pemeliharaan Alat Kesehatan"></option>
+                    <option value="UM.02.07 - Administrasi Perjalanan Dinas"></option>
+                    <option value="UM.02.08 - Administrasi Penghematan Energi dan Air"></option>
+                    <option value="UM.03.01 - Penyelenggaraan Upacara Nasional"></option>
+                    <option value="UM.03.02 - Pelayanan Tamu, Acara Kedinasan, Jamuan, dan Ramah Tamah"></option>
+                    <option value="UM.03.03 - Daftar Nama Pejabat dan Alamat"></option>
+                    <option value="UM.04.01 - Pengamanan Personil"></option>
+                    <option value="UM.04.02 - Pengamanan Lingkungan, Fisik, dan Instalasi"></option>
+                    <option value="UM.04.03 - Pengamanan Dokumen dan Informasi Rahasia"></option>
+                    <option value="UM.04.04 - Laporan Keamanan"></option>
+                    <option value="UM.04.05 - Laporan Kejadian"></option>
+                    <option value="UM.04.06 - Permintaan dan Bantuan Pengamanan"></option>
+                    <option value="UM.05.01 - Layanan Keagamaan"></option>
+                    <option value="UM.05.02 - Layanan Kesehatan Jasmani"></option>
+                    <option value="UM.05.03 - Pelayanan Kesehatan"></option>
+                    <option value="UM.06.01 - Akusisi"></option>
+                    <option value="UM.06.02 - Pegolahan Bahan Pustaka"></option>
+                    <option value="UM.06.03 - Pangkalan Data Koleksi Perpustakaan"></option>
+                    <option value="UM.06.04 - Layanan Perpustakaan"></option>
+                    <option value="UM.06.05 - Preservasi Bahan Pustaka"></option>
+                    <option value="UM.06.06 - Pengembangan Perpustakaan"></option>
+                    <option value="UM.06.07 - Pendidikan dan Pelatihan Perpustakaan"></option>
+                    <option value="UM.06.08 - Tenaga Perpustakaan"></option>
+                    <option value="PW.01.01 - Kebijakan Pengawasan"></option>
+                    <option value="PW.01.02 - Program Kerja Pengawasan Tahunan"></option>
+                    <option value="PW.01.03 - Program Kerja Administrasi Umum"></option>
+                    <option value="PW.01.04 - Rapat Koordinasi Pengawasan"></option>
+                    <option value="PW.01.05 - Ikhtisar Hasil Pengawasan"></option>
+                    <option value="PW.02.01 - Audit Kinerja dan Informasi, Reviu, dan Evaluasi"></option>
+                    <option value="PW.02.02 - Audit Tujuan Tertentu/Khusus"></option>
+                    <option value="PW.02.03 - Pemantauan/Monitoring"></option>
+                    <option value="PW.02.04 - Pengawasan Lainnya, Pendampingan, Sosialisasi, dan Perjanjian Kerja Sama"></option>
+                    <option value="PW.03.01 - Laporan Hasil Audit Kinerja Informasi Data Pendukung Pemeriksaan Dalam Negeri dan Luar Negeri"></option>
+                    <option value="PW.03.02 - Laporan Hasil Audit Tujuan Tertentu (audit khusus)"></option>
+                    <option value="PW.03.03 - Pelaporan Pemantauan/Monitoring Badan pemeriksan keuangan Republik Indonesia, Badan Pengawasan Keuangan dan Pembangunan Republik Indonesia, Ombudsman Republik Indonesia, dan Inspektorat Jenderal"></option>
+                    <option value="PW.03.04 - Pelaporan Pengawasan Lainnya, Pendampingan, Sosialisasi, dan Perjanjian Kerja Sama"></option>
+                    <option value="PW.03.05 - Pelaporan Inspektorat Jenderal"></option>
+                    <option value="PW.04.01 - Tindak Lanjut Hasil Audit Kinerja"></option>
+                    <option value="PW.04.02 - Tindak Lanjut Hasil Audit Khusus"></option>
+                    <option value="PW.04.03 - Tindak Lanjut Badan Pengawasan Keuangan dan Pembangunan Republik Indonesia, Badan Pemeriksa Keuangan Republik Indonesia, dan Inspektorat Jenderal"></option>
+                    <option value="PW.05.01 - Reviu"></option>
+                    <option value="PW.06.01 - Whistle Blowing System"></option>
+                    <option value="PW.06.02 - Gratifikasi"></option>
+                    <option value="PW.06.03 - Pengaduan Tertulis (sms gateway, po box, dan surat elektronik)"></option>
+                    <option value="PW.06.04 - Pengaduan melalui Aplikasi dan Layanan Aspirasi dan Pengaduan Online Rakyat"></option>
+                    <option value="PW.06.05 - Pengaduan Ombusman"></option>
+                    <option value="PW.07.01 - Tanggapan/Telaahan Hukuman Disiplin yang Tidak Ditindaklanjuti"></option>
+                    <option value="PW.07.02 - Tanggapan/Telaahan Hukuman Disiplin yang Ditindaklanjuti"></option>
+                    <option value="PW.07.03 - Daftar Nama Pegawai Kementerian yang Dikenakan Sanksi Hukuman Disiplin/Kartu Cela"></option>
+                    <option value="TI.01.01 - Rencana Induk Teknologi Informasi"></option>
+                    <option value="TI.01.02 - Penyusunan Program"></option>
+                    <option value="TI.01.03 - Pengembangan Aplikasi"></option>
+                    <option value="TI.01.04 - Pengembangan Database, Situs Internet, dan Surat Elektronik"></option>
+                    <option value="TI.02.01 - Pengamanan Data"></option>
+                    <option value="TI.03.01 - Pengamanan Jaringan"></option>
+                    <option value="TI.04.01 - Pedoman Standarisasi Teknologi dan Informasi"></option>
+                    <option value="TI.04.02 - Implementasi Aplikasi"></option>
+                    <option value="TI.04.03 - Implementasi Situs Internet, Portal Internet, dan Surat Elektronik"></option>
+                    <option value="TI.04.04 - Uji Coba Infrastruktur"></option>
+                    <option value="TI.05.01 - Pengelolaan Jaringan"></option>
+                    <option value="TI.05.02 - Pengelolaan Jaringan Sistem Informasi"></option>
+                    <option value="TI.05.03 - Pengelolaan Database"></option>
+                    <option value="TI.05.04 - Pengelolaan Situs Internet, Portal Internet, dan Surat Elektronik"></option>
+                    <option value="TI.05.05 - Pengelolaan Aplikasi"></option>
+                    <option value="TI.05.06 - Pengelolaan Alat Pendukung"></option>
+                    <option value="TI.06.01 - Naskah Layanan Keluhan Layanan Pengadaan secara Elektronik"></option>
+                    <option value="TI.06.02 - Tindak Lanjut Keluhan"></option>
+                    <option value="TI.06.03 - Monitoring/Pemantauan Layanan Keluhan Tentang Perangkat Lunak/Perangkat Keras"></option>
+                    <option value="TI.06.04 - Evaluasi Teknologi Informasi"></option>
+                    <option value="TI.07.01 - Media Massa (cetak, elektronik, dan media sosial)"></option>
+                    <option value="TI.07.02 - Sosialisasi dan Diseminasi"></option>
+                    <option value="TI.07.03 - Pengelolaan Pejabat Pengelola Informasi dan Dokumentasi"></option>
+                    <option value="TI.07.04 - Badan Koordinasi Hubungan Masyarakat"></option>
+                    <option value="TI.07.05 - Peliputan"></option>
+                    <option value="TI.07.06 - Konferensi Pers"></option>
+                    <option value="TI.07.07 - Siaran Pers"></option>
+                    <option value="TI.08.01 - Dokumentasi/Liputan Kegiatan Kedinasan Menteri/wakil Menteri dalam Berbagai Media"></option>
+                    <option value="TI.08.02 - Dokumentasi/Liputan Kegiatan Kedinasan Pejabat Tinggi Madya ke bawah dalam Berbagai Media"></option>
+                    <option value="TI.08.03 - Rekapitulasi Pemberitaan"></option>
+                    <option value="PK.01.01 - Perumusan Kebijakan dan Standardisasi Pemasyarakatan"></option>
+                    <option value="PK.02.01 - Registrasi Tahanan dan Anak"></option>
+                    <option value="PK.02.02 - Registrasi Narapidana dan Anak Binaan"></option>
+                    <option value="PK.02.03 - Registrasi Klien Pemasyarakatan"></option>
+                    <option value="PK.02.04 - Registrasi Titipan"></option>
+                    <option value="PK.02.05 - Administrasi Pelayanan Tahanan di luar Rumah Tahanan"></option>
+                    <option value="PK.02.06 - Peminjaman/Bon Narapidana dan Anak Binaan"></option>
+                    <option value="PK.03.01 - Admisi Orientasi"></option>
+                    <option value="PK.03.02 - Asesmen dan Klasifikasi"></option>
+                    <option value="PK.04.01 - Mutasi Tahanan dan Anak"></option>
+                    <option value="PK.04.02 - Mutasi Narapidana dan Anak Binaan"></option>
+                    <option value="PK.04.03 - Mutasi Klien Pemasyarakatan"></option>
+                    <option value="PK.05.01 - Layanan Kepribadian"></option>
+                    <option value="PK.05.02 - Layanan Kemandirian"></option>
+                    <option value="PK.05.03 - Layanan Pelindungan Hukum Tahanan dan Anak"></option>
+                    <option value="PK.05.04 - Pengeluaran Tahanan dan Anak"></option>
+                    <option value="PK.05.05 - Pertimbangan Pemasyarakatan Pelayanan Tahanan dan Anak"></option>
+                    <option value="PK.06.01 - Pembinaan Kepribadian"></option>
+                    <option value="PK.06.02 - Pembinaan Kemandirian"></option>
+                    <option value="PK.06.03 - Asimilasi dan Integrasi Narapidana dan Anak Binaan"></option>
+                    <option value="PK.06.04 - Pengeluaran Narapidana dan Anak Binaan"></option>
+                    <option value="PK.06.05 - Pertimbangan Pemasyarakatan Pembinaan Narapidana dan Anak Binaan"></option>
+                    <option value="PK.07.01 - Penelitian Kemasyarakatan"></option>
+                    <option value="PK.07.02 - Pendampingan Klien Pemasyarakatan dan Upaya Keadilan Restoratif Pemasyarakatan"></option>
+                    <option value="PK.07.03 - Pembimbingan Klien Pemasyarakatan"></option>
+                    <option value="PK.07.04 - Pengawasan Klien Pemasyarakatan"></option>
+                    <option value="PK.07.05 - Pertimbangan Pemasyarakatan Pembimbingan Klien Pemasyarakatan"></option>
+                    <option value="PK.08.01 - Perawatan Kesehatan Dasar"></option>
+                    <option value="PK.08.02 - Perawatan Kesehatan Lanjutan"></option>
+                    <option value="PK.08.03 - Perawatan Kesehatan Khusus"></option>
+                    <option value="PK.08.04 - Kebutuhan Dasar dan Kesehatan Lingkungan"></option>
+                    <option value="PK.09.01 - Intelijen Pemasyarakatan"></option>
+                    <option value="PK.09.02 - Pencegahan Gangguan Keamanan dan Pemeliharaan Keamanan"></option>
+                    <option value="PK.09.03 - Penindakan dan Pemulihan"></option>
+                    <option value="PK.10.01 - Pencegahan dan Pengendalian"></option>
+                    <option value="PK.10.02 - Fasilitasi Advokasi dan Investigasi Internal"></option>
+                    <option value="PK.11.01 - Pengelolaan Data Dan Informasi"></option>
+                    <option value="PK.11.02 - Pengelolaan Data dan Informasi Narapidana Tindak Pidana yang Mengancam Keamanan Negara, Tahanan Politik, Perdagangan Manusia, Terorisme, Korupsi, Tindak Pidana Kejahatan Hak Asasi Manusia Berat, dan Tindak Pidana dengan Putusan Hukuman Mati"></option>
+                  </datalist>
+                </div>
+
+                <div class="form-group">
+                  <label>Tujuan Surat</label>
+                  <input type="text" name="tujuan" class="kapital" oninput="this.value = this.value.toUpperCase()" placeholder="KEPADA YTH..." required>
+                </div>
+                
+                <div class="form-group">
+                  <label>Perihal Surat</label>
+                  <input type="text" name="perihal" class="kapital" oninput="this.value = this.value.toUpperCase()" placeholder="TENTANG / ACARA / PERIHAL..." required>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                  <div class="form-group">
+                    <label>Subseksi Pengirim</label>
+                    <select name="subseksi" class="kapital" required>
+                      <option value="" disabled selected>PILIH SUBSEKSI...</option>
+                      <option value="TATA USAHA">Tata Usaha</option>
+                      <option value="SUBSEKSI KEAMANAN DAN KETERTIBAN">Subseksi Keamanan dan Ketertiban</option>
+                      <option value="SUBSEKSI PEMBINAAN">Subseksi Pembinaan</option>
+                      <option value="SUBSEKSI ADMISI ORIENTASI">Subseksi Admisi Orientasi</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label>Nama Pemohon/Pembuat Surat</label>
+                    <input type="text" name="namaPemohon" class="kapital" oninput="this.value = this.value.toUpperCase()" placeholder="NAMA ANDA" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label>Upload Berkas Surat</label>
+                  <span class="bantuan">Unggah berkas dalam format PDF, Word (DOC/DOCX), atau Gambar (JPG/PNG). Maks 5MB.</span>
+                  <input type="file" name="berkasSurat" accept=".pdf, .doc, .docx, .jpg, .jpeg, .png" required>
+                </div>
+                
+                <button type="submit" id="btnSubmit">
+                  <svg style="width:18px;height:18px;vertical-align:middle;margin-right:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  GENERATE NOMOR SURAT
+                </button>
+              </form>
+
+              <div id="outputSuccess" class="alert-box alert-success"></div>
+              <div id="outputError" class="alert-box alert-error"></div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <h2>Riwayat 10 Surat Terakhir</h2>
+              </div>
+              <div class="table-responsive">
+                <table>
+                  <thead>
+                    <tr><th>Nomor Surat & Pembuat</th><th>Tanggal</th><th>Tujuan</th><th>Perihal</th><th>Subseksi</th></tr>
+                  </thead>
+                  <tbody id="tabelBody">
+                    <tr><td colspan="5" class="loading-text">Menghubungkan ke server database...</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+          </div>
+        </div> 
+      </div>
+      <!-- TEMPELKAN FOOTER DI SINI -->
+      <footer>
+          &copy; 2026 Sistem Administrasi Persuratan by Nyoman Ardana Wijaya<br>
+          Lembaga Pemasyarakatan Kelas III Parigi<br>
+          Direktorat Jenderal Pemasyarakatan Sulawesi Tengah<br>
+          Kementerian Imigrasi dan Pemasyarakatan
+      </footer>
+
+    </main>
+  </div> <!-- (Tutup div.dashboard-layout) -->
+    </main>
+  </div>
+
+  <!-- KOTAK MODAL UMUM -->
+  <div id="customModal" class="modal-overlay">
+    <div class="modal-container" id="modalContainerBox">
+      <div class="modal-header">
+        <h3 id="modalTitle">Judul Modal</h3>
+        <button class="modal-close" onclick="tutupModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Konten dinamis -->
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    // MOCK OBJECT: Mengatasi error "google is not defined" saat di-preview secara lokal.
+    // Kode ini akan otomatis nonaktif jika dijalankan di server asli Google Apps Script.
+    if (typeof google === 'undefined') {
+      window.google = {
+        script: {
+          run: {
+            withSuccessHandler: function(callback) { this._success = callback; return this; },
+            withFailureHandler: function(callback) { this._error = callback; return this; },
+            checkAdminAccess: function() { var s = this._success; setTimeout(function(){ if(s) s(true); }, 500); },
+            getDataSurat: function() { 
+              var s = this._success; 
+              setTimeout(function(){ 
+                if(s) s([["WP.24.PAS.10-UM.01.01-1", "UM.01.01", "2026-08-01", "DUMMY PREVIEW", "TATA USAHA", "PREVIEW USER", "DATA PREVIEW", "test@lapas.go.id", "#"]]); 
+              }, 800); 
+            },
+            prosesForm: function(data) { var s = this._success; setTimeout(function(){ if(s) s("WP.24.PAS.10-TEST-999"); }, 2000); },
+            getArsipSubseksi: function(sub) { var s = this._success; setTimeout(function(){ if(s) s([]); }, 500); },
+            getDasarHukum: function() { var s = this._success; setTimeout(function(){ if(s) s([]); }, 500); },
+            getAnalisaData: function() { var s = this._success; setTimeout(function(){ if(s) s({totalSurat: 1, subseksi: {"TATA USAHA": 1}, klasifikasi: {"UM.01.01": 1}}); }, 500); },
+            eksporDataExcel: function(s, k) { var cb = this._success; setTimeout(function(){ if(cb) cb("#"); }, 1500); },
+            eksporDokumenZip: function(a, b, c) { var cb = this._success; setTimeout(function(){ if(cb) cb({url:"#", count:0, isLimited:false}); }, 1500); }
+          }
+        }
+      };
+    }
+
+    window.onload = function() {
+      muatDataTabel();
+      cekHakAksesAdmin();
+    };
+
+    function cekHakAksesAdmin() {
+      google.script.run
+        .withSuccessHandler(function(isAdmin) {
+          if(isAdmin) {
+            document.getElementById('adminPanelWrapper').style.display = 'block';
+          }
+        })
+        .checkAdminAccess();
+    }
+    
+    function bukaDatalistHP() {
+      var input = document.getElementById("kodeKlasifikasi");
+      input.focus();
+      try {
+        if (typeof input.showPicker === 'function') input.showPicker();
+      } catch (e) {
+        input.value = " "; 
+        var event = new Event('input', { bubbles: true });
+        input.dispatchEvent(event);
+        input.value = "";  
+      }
+    }
+
+    function getBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => {
+           let encoded = reader.result.toString().replace(/^data:(.*,)?/, '');
+           if ((encoded.length % 4) > 0) encoded += '='.repeat(4 - (encoded.length % 4));
+           resolve(encoded);
+        };
+        reader.onerror = error => reject(error);
+      });
+    }
+
+    async function handleFormSubmit(e) {
+      e.preventDefault(); 
+      
+      var kodeInput = document.getElementById("kodeKlasifikasi").value;
+      if(kodeInput.indexOf(".") === -1) {
+        tampilkanError("Gunakan format kode yang benar dan pilih dari daftar (contoh: UM.01.01)");
+        return;
+      }
+
+      var btn = document.getElementById("btnSubmit");
+      document.getElementById("outputSuccess").style.display = "none";
+      document.getElementById("outputError").style.display = "none";
+      
+      btn.disabled = true;
+      btn.innerHTML = '<svg class="spinner-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" style="opacity: 0.25;"></circle><path fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" style="opacity: 0.75;"></path></svg> MEMPROSES DATA...';
+
+      try {
+        var fileInput = document.querySelector('input[name="berkasSurat"]');
+        var file = fileInput.files[0];
+        
+        if (file && file.size > 5 * 1024 * 1024) {
+             throw new Error("Ukuran file terlalu besar. Maksimal 5MB.");
+        }
+
+        var dataKirim = {
+           tanggalSurat: document.querySelector('input[name="tanggalSurat"]').value,
+           kodeKlasifikasi: document.querySelector('input[name="kodeKlasifikasi"]').value,
+           tujuan: document.querySelector('input[name="tujuan"]').value,
+           perihal: document.querySelector('input[name="perihal"]').value,
+           subseksi: document.querySelector('select[name="subseksi"]').value,
+           namaPemohon: document.querySelector('input[name="namaPemohon"]').value,
+           fileData: null,
+           fileName: null,
+           fileMimeType: null
+        };
+
+        if (file) {
+            dataKirim.fileName = file.name;
+            dataKirim.fileMimeType = file.type || 'application/octet-stream';
+            dataKirim.fileData = await getBase64(file);
+        }
+
+        google.script.run
+          .withSuccessHandler(updateUrl)
+          .withFailureHandler(function(error){
+             var pesanError = error.message ? error.message : error; 
+             tampilkanError(pesanError);
+             btn.disabled = false;
+             btn.innerHTML = '<svg style="width:18px;height:18px;vertical-align:middle;margin-right:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> GENERATE NOMOR SURAT';
+          })
+          .prosesForm(dataKirim);
+
+      } catch (err) {
+         tampilkanError(err.message);
+         btn.disabled = false;
+         btn.innerHTML = '<svg style="width:18px;height:18px;vertical-align:middle;margin-right:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> GENERATE NOMOR SURAT';
+      }
+    }
+
+    function updateUrl(nomor) {
+      var out = document.getElementById("outputSuccess");
+      var btn = document.getElementById("btnSubmit");
+      
+      out.innerHTML = "<strong>BERHASIL!</strong> Nomor Surat Anda:<br><span class='nomor-besar'>" + nomor + "</span><small>Berkas telah diunggah & tercatat otomatis di Buku Agenda Digital.</small>";
+      out.style.display = "block";
+      
+      btn.disabled = false;
+      btn.innerHTML = '<svg style="width:18px;height:18px;vertical-align:middle;margin-right:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> GENERATE NOMOR BARU';
+      
+      document.getElementById("myForm").reset();
+      muatDataTabel(); 
+    }
+
+    function tampilkanError(pesan) {
+      var err = document.getElementById("outputError");
+      err.innerHTML = "<strong>GAGAL:</strong> " + pesan;
+      err.style.display = "block";
+    }
+
+    function muatDataTabel() {
+      document.getElementById("tabelBody").innerHTML = "<tr><td colspan='5' class='loading-text'>Memuat pembaruan data...</td></tr>";
+      
+      google.script.run
+        .withSuccessHandler(tampilkanTabel)
+        .withFailureHandler(function(error) {
+          document.getElementById("tabelBody").innerHTML = "<tr><td colspan='5' class='loading-text' style='color:red;'>Gagal memuat tabel: " + error.message + "</td></tr>";
+        })
+        .getDataSurat();
+    }
+
+    function tampilkanTabel(data) {
+      var tbody = document.getElementById("tabelBody");
+      tbody.innerHTML = ""; 
+
+      if (data.length === 0) {
+        tbody.innerHTML = "<tr><td colspan='5' class='loading-text'>Belum ada surat yang diambil hari ini.</td></tr>";
+        return;
+      }
+
+      for (var i = 0; i < data.length; i++) {
+        var baris = data[i];
+        
+        var tglRapi = "-";
+        if (baris[2]) {
+           try {
+             var tglMentah = new Date(baris[2]);
+             tglRapi = ("0" + tglMentah.getDate()).slice(-2) + "/" + ("0" + (tglMentah.getMonth() + 1)).slice(-2) + "/" + tglMentah.getFullYear();
+             if (tglRapi.includes("NaN")) tglRapi = baris[2];
+           } catch(e) {
+             tglRapi = baris[2];
+           }
+        }
+
+        var htmlBaris = "<tr>" +
+          "<td><span class='tag-nomor'>" + (baris[0] || "-") + "</span><br><small style='color:var(--text-muted); font-weight:500; margin-top:5px; display:inline-block;'>👤 " + (baris[5] || "-") + "</small></td>" + 
+          "<td>" + tglRapi + "</td>" + 
+          "<td>" + (baris[3] || "-") + "</td>" + 
+          "<td>" + (baris[6] || "-") + "</td>" + 
+          "<td>" + (baris[4] || "-") + "</td>" + 
+        "</tr>";
+        
+        tbody.innerHTML += htmlBaris;
+      }
+    }
+
+    // --- MANAJEMEN MODAL ---
+    function bukaModal(judul, isSmall = false) {
+      document.getElementById('modalTitle').innerText = judul;
+      var container = document.getElementById('modalContainerBox');
+      if(isSmall) { container.classList.add('small-modal'); } 
+      else { container.classList.remove('small-modal'); }
+      document.getElementById('customModal').style.display = 'flex';
+    }
+    
+    function tutupModal() {
+      document.getElementById('customModal').style.display = 'none';
+    }
+
+    // --- FUNGSI STANDAR (Arsip & Hukum) ---
+    function bukaArsip(namaSubseksi) {
+      bukaModal("Arsip Surat: " + namaSubseksi);
+      var body = document.getElementById('modalBody');
+      body.innerHTML = "<p style='text-align:center;'>Memuat data arsip...</p>";
+
+      google.script.run
+        .withSuccessHandler(function(data) {
+          if (data.length === 0) {
+            body.innerHTML = "<p style='text-align:center; color:#64748b;'>Belum ada arsip surat untuk subseksi ini.</p>";
+            return;
+          }
+          
+          var html = '<table class="modal-table"><thead><tr><th>No. Surat</th><th>Tanggal</th><th>Tujuan</th><th>Perihal</th><th>Berkas</th></tr></thead><tbody>';
+          data.forEach(function(row) {
+            html += '<tr>' +
+                      '<td>' + row.nomorSurat + '</td>' +
+                      '<td>' + row.tanggal + '</td>' +
+                      '<td>' + row.tujuan + '</td>' +
+                      '<td>' + row.perihal + '</td>' +
+                      '<td><a href="' + row.fileUrl + '" target="_blank">Lihat Berkas</a></td>' +
+                    '</tr>';
+          });
+          html += '</tbody></table>';
+          body.innerHTML = html;
+        })
+        .withFailureHandler(function(err) {
+          body.innerHTML = "<p style='color:red;'>Gagal memuat data: " + err.message + "</p>";
+        })
+        .getArsipSubseksi(namaSubseksi);
+    }
+    
+    function bukaDasarHukum() {
+      bukaModal("Dasar Hukum & SOP");
+      var body = document.getElementById('modalBody');
+      body.innerHTML = "<p style='text-align:center;'>Memuat daftar peraturan...</p>";
+
+      google.script.run
+        .withSuccessHandler(function(files) {
+          if (files.length === 0) {
+            body.innerHTML = "<p style='text-align:center; color:#64748b;'>Belum ada file di dalam folder Dasar Hukum Google Drive.</p>";
+            return;
+          }
+          
+          var html = '<table class="modal-table"><thead><tr><th>Nama Dokumen</th><th>Ukuran</th><th>Terakhir Diperbarui</th><th>Aksi</th></tr></thead><tbody>';
+          files.forEach(function(file) {
+            html += '<tr>' +
+                      '<td>' + file.nama + '</td>' +
+                      '<td>' + file.ukuran + '</td>' +
+                      '<td>' + file.tanggal + '</td>' +
+                      '<td><a href="' + file.url + '" target="_blank" style="background:#2563eb; color:white; padding:5px 10px; border-radius:4px; text-decoration:none;">Unduh / Buka</a></td>' +
+                    '</tr>';
+          });
+          html += '</tbody></table>';
+          body.innerHTML = html;
+        })
+        .withFailureHandler(function(err) {
+          body.innerHTML = "<p style='color:red;'>Gagal memuat file: " + err.message + "</p>";
+        })
+        .getDasarHukum();
+    }
+
+    // ==========================================================
+    // FUNGSI ADMIN JAVASCRIPT
+    // ==========================================================
+    
+    // 1. Analisa Penomoran
+    function bukaAdminAnalisa() {
+      bukaModal("Analisa Penomoran Surat");
+      var body = document.getElementById('modalBody');
+      body.innerHTML = "<p class='loading-text'>Menghitung data...</p>";
+
+      google.script.run
+        .withSuccessHandler(function(stats) {
+          if(!stats) { body.innerHTML = "<p>Data tidak ditemukan.</p>"; return; }
+          
+          var html = '<div class="stat-grid">';
+          html += '<div class="stat-card"><h4>Total Surat Keluar</h4><p>'+stats.totalSurat+'</p></div>';
+          html += '</div>';
+
+          // Tabel Subseksi
+          html += '<h3>Distribusi per Subseksi</h3><table class="modal-table"><thead><tr><th>Subseksi</th><th>Jumlah Surat</th></tr></thead><tbody>';
+          for (var sub in stats.subseksi) {
+            html += '<tr><td>'+sub+'</td><td>'+stats.subseksi[sub]+'</td></tr>';
+          }
+          html += '</tbody></table><br>';
+
+          // Tabel Klasifikasi
+          html += '<h3>Distribusi per Kode Klasifikasi</h3><table class="modal-table"><thead><tr><th>Kode Klasifikasi</th><th>Jumlah Surat</th></tr></thead><tbody>';
+          for (var klas in stats.klasifikasi) {
+            html += '<tr><td>'+klas+'</td><td>'+stats.klasifikasi[klas]+'</td></tr>';
+          }
+          html += '</tbody></table>';
+
+          body.innerHTML = html;
+        })
+        .withFailureHandler(function(err){
+           body.innerHTML = "<p style='color:red;'>Error: " + err.message + "</p>";
+        })
+        .getAnalisaData();
+    }
+
+    // 2. Ekspor Data Excel
+    function bukaAdminEksporData() {
+      bukaModal("Ekspor Data Surat (Excel / Spreadsheet)", true);
+      var html = `
+        <form onsubmit="prosesEksporData(event)">
+          <div class="form-group">
+            <label>Filter Subseksi</label>
+            <select id="exportDataSubseksi" class="kapital">
+              <option value="SEMUA">-- SEMUA SUBSEKSI --</option>
+              <option value="TATA USAHA">Tata Usaha</option>
+              <option value="SUBSEKSI KEAMANAN DAN KETERTIBAN">Keamanan dan Ketertiban</option>
+              <option value="SUBSEKSI PEMBINAAN">Pembinaan</option>
+              <option value="SUBSEKSI ADMISI ORIENTASI">Admisi Orientasi</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Filter Kode Klasifikasi (Opsional)</label>
+            <input type="text" id="exportDataKlasifikasi" class="kapital" placeholder="Ketik kode (cth: UM.01.01) atau biarkan kosong untuk SEMUA">
+          </div>
+          <button type="submit" id="btnEksporData" class="btn-success">BUAT FILE EXCEL</button>
+          <div id="resEksporData" style="margin-top:15px; text-align:center;"></div>
+        </form>
+      `;
+      document.getElementById('modalBody').innerHTML = html;
+    }
+
+    function prosesEksporData(e) {
+      e.preventDefault();
+      var btn = document.getElementById('btnEksporData');
+      var res = document.getElementById('resEksporData');
+      var sub = document.getElementById('exportDataSubseksi').value;
+      var klas = document.getElementById('exportDataKlasifikasi').value || "SEMUA";
+      
+      btn.disabled = true;
+      btn.innerHTML = "MEMBUAT SPREADSHEET...";
+      res.innerHTML = "";
+
+      google.script.run
+        .withSuccessHandler(function(url) {
+          btn.disabled = false;
+          btn.innerHTML = "BUAT FILE EXCEL";
+          res.innerHTML = `<div class="alert-box alert-success" style="display:block;">Berhasil! <br><br><a href="${url}" target="_blank" style="background:#059669; color:white; padding:10px 15px; text-decoration:none; border-radius:5px; display:inline-block;">Buka File Spreadsheet</a><br><br><small>Untuk menyimpan ke komputer: Buka link di atas, lalu klik <b>File > Download > Microsoft Excel (.xlsx)</b></small></div>`;
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.innerHTML = "BUAT FILE EXCEL";
+          res.innerHTML = `<div class="alert-box alert-error" style="display:block;">${err.message}</div>`;
+        })
+        .eksporDataExcel(sub, klas);
+    }
+
+    // 3. Ekspor ZIP Dokumen
+    function bukaAdminEksporZip() {
+      bukaModal("Ekspor Dokumen Fisik (Format .ZIP)", true);
+      var html = `
+        <form onsubmit="prosesEksporZip(event)">
+          <p style="font-size:0.85rem; color:#64748b; margin-top:0;">Anda dapat mengekspor dokumen per bulan, triwulan, atau tahun dengan memilih rentang tanggal di bawah.</p>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+             <div class="form-group"><label>Dari Tanggal</label><input type="date" id="zipTglAwal" required></div>
+             <div class="form-group"><label>Sampai Tanggal</label><input type="date" id="zipTglAkhir" required></div>
+          </div>
+          <div class="form-group">
+            <label>Filter Subseksi</label>
+            <select id="zipSubseksi" class="kapital">
+              <option value="SEMUA">-- SEMUA SUBSEKSI --</option>
+              <option value="TATA USAHA">Tata Usaha</option>
+              <option value="SUBSEKSI KEAMANAN DAN KETERTIBAN">Keamanan dan Ketertiban</option>
+              <option value="SUBSEKSI PEMBINAAN">Pembinaan</option>
+              <option value="SUBSEKSI ADMISI ORIENTASI">Admisi Orientasi</option>
+            </select>
+          </div>
+          <button type="submit" id="btnEksporZip" class="btn-success">GENERATE FILE ZIP</button>
+          <div id="resEksporZip" style="margin-top:15px; text-align:center;"></div>
+        </form>
+      `;
+      document.getElementById('modalBody').innerHTML = html;
+    }
+
+    function prosesEksporZip(e) {
+      e.preventDefault();
+      var btn = document.getElementById('btnEksporZip');
+      var res = document.getElementById('resEksporZip');
+      
+      var tglAwal = document.getElementById('zipTglAwal').value;
+      var tglAkhir = document.getElementById('zipTglAkhir').value;
+      var sub = document.getElementById('zipSubseksi').value;
+      
+      btn.disabled = true;
+      btn.innerHTML = "MENGOMPRESI FILE (TUNGGU SEBENTAR)...";
+      res.innerHTML = "";
+
+      google.script.run
+        .withSuccessHandler(function(result) {
+          btn.disabled = false;
+          btn.innerHTML = "GENERATE FILE ZIP";
+          var porsiLimit = result.isLimited ? "<br><br><small style='color:red;'>Perhatian: Karena batas memori server Google, ZIP ini hanya berisi 50 file pertama dari rentang waktu yang Anda minta. Harap persingkat rentang waktu (misal: per minggu) untuk mengambil sisanya.</small>" : "";
+          
+          res.innerHTML = `<div class="alert-box alert-success" style="display:block;">Berhasil membungkus ${result.count} file!<br><br><a href="${result.url}" target="_blank" style="background:#059669; color:white; padding:10px 15px; text-decoration:none; border-radius:5px; display:inline-block;">Unduh Berkas ZIP</a>${porsiLimit}</div>`;
+        })
+        .withFailureHandler(function(err) {
+          btn.disabled = false;
+          btn.innerHTML = "GENERATE FILE ZIP";
+          res.innerHTML = `<div class="alert-box alert-error" style="display:block;">${err.message}</div>`;
+        })
+        .eksporDokumenZip(tglAwal, tglAkhir, sub);
+    }
+  </script>
+</body>
+</html>
